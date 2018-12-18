@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+from __future__ import division
+import numpy as np 
+import sys
+
+
+# Reads the input file. Outputs k (number of steps), errorType (0 : MSQ (L2), 1 : Max Error (L1)), h (list of points)
+def read_input(filename):
+	f = open(filename, 'r')
+	lines = f.readlines()
+	k, errorType = list(map(int, lines[0][:-1].split()[:2]))
+	N = int(lines[1][:-1])
+	h = []
+	for i in range(N):
+		h.append(list(map(int, lines[i+2][:-1].split()[:2])))
+	return k, N, errorType, h
+
+# Computes distance metric between indices i and j
+inp_filename = sys.argv[1]
+out_filename = sys.argv[2]
+k, N, errorType, h = read_input(inp_filename)
+
+def distance(i, j, h, errorType):
+	x = 0
+	if errorType == 0: # Mean Square Error
+		for k in range(i, j+1):
+			x += h[k][1]
+		x = x/(j-i+1)
+	else: #Max Error
+		miny = maxy = h[j][1]
+		for k in range(i, j):
+			if h[k][1] < miny:
+				miny = h[k][1] 
+			if h[k][1] > maxy:
+				maxy = h[k][1] 
+		x = (miny+maxy)/2
+
+	distance = 0
+
+	if errorType == 0: #L2 Norm
+		for k_itr in range(i, j+1):
+			distance += (h[k_itr][1] - x)**2
+	else: # L1 Norm
+		for k_itr in range(i, j+1):
+			if (abs(h[k_itr][1] - x) > distance):
+				distance = abs(h[k_itr][1] - x)
+
+	return distance, x
+
+
+if k == N:
+	f = open(out_filename, 'w')
+	f.write(str(k)+"\n")
+	for i in range(N):
+		f.write(str(h[i][0])+" "+str(h[i][1])+"\n")
+	f.close()
+else:
+	# Fill up the distance matrix, and mu (mean) matrix. 
+	# Mu matrix is the mean of the h values from index i to index j with respect to the particular distance metric. 
+	# Similiarly, the distance matrix is the distance of the h values from index i to index j
+	distMat = np.zeros((N, N))
+	muMat = np.zeros((N, N))
+	for i in range(N):
+		for j in range(i, N):
+			distMat[i][j], muMat[i][j] = distance(i, j, h, errorType)
+
+
+	# Perform the dynamic programming
+	# Maintain 2 matrics - errorMat - contains values corresponding to min error; stepFn - contains the tuples which define the step function
+	# Dimensions of matrices - (k * N)
+	# Matrix would be filled row wise. One row first, then the second, etc
+
+	errorMat = np.zeros((k, N))
+	stepFn = np.zeros((k, N), dtype=object)
+
+	for i in range(k):
+		for j in range(i, N):
+			if i == j: # All diagonal elements
+				errorMat[i][j] = distMat[j][j]
+				stepFn[i][j] = []
+				for itr in range(j+1):
+					stepFn[i][j].append((h[itr][0], h[itr][1]))
+			elif i == 0: # First row
+				errorMat[i][j] = distMat[0][j]
+				stepFn[i][j] = [(h[0][0], muMat[0][j])]
+			else: # j > i
+				s = j-1
+				if errorType == 0:
+					min_error = errorMat[i-1][s] + distMat[s][j]
+					for s_itr in range(j-1, i-1, -1):
+						if ((errorMat[i-1][s_itr-1] + distMat[s_itr][j]) <= min_error):
+							min_error = (errorMat[i-1][s_itr-1] + distMat[s_itr][j])
+							s = s_itr
+				else:
+					min_error = max(errorMat[i-1][s], distMat[s][j])
+					for s_itr in range(j-1, i-1, -1):
+						if (max(errorMat[i-1][s_itr-1], distMat[s_itr][j]) <= min_error):
+							min_error = max(errorMat[i-1][s_itr-1], distMat[s_itr][j])
+							s = s_itr
+				
+				errorMat[i][j] = min_error
+				stepFn[i][j] = []
+				stepFn[i][j] = stepFn[i-1][s-1] + [(h[s][0], muMat[s][j])]
+
+	print("error - " + str(errorMat[k-1][N-1]))
+	print("Step Function - ")
+	for idx in range(len(stepFn[k-1][N-1])):
+		print(str(stepFn[k-1][N-1][idx][0]) + ", " + str(stepFn[k-1][N-1][idx][1]))
+
+	# print(stepFn[k-1][N-1])
+	final_stepfn = stepFn[k-1][N-1]
+	# print(final_stepfn)
+
+	f = open(out_filename, 'w')
+	f.write(str(len(final_stepfn))+"\n")
+	for i in range(len(final_stepfn)):
+		f.write(str(final_stepfn[i][0])+" "+str(final_stepfn[i][1])+"\n")
+	f.close()
+

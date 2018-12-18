@@ -1,0 +1,11 @@
+./stepDp k-function-approximation/sampleTestCases/inp1.txt my-outputs/out1.txt
+./stepDp k-function-approximation/sampleTestCases/inp2.txt my-outputs/out2.txt
+./stepDp k-function-approximation/sampleTestCases/inp3.txt my-outputs/out3.txt
+./stepDp k-function-approximation/sampleTestCases/inp4.txt my-outputs/out4.txt
+./stepDp k-function-approximation/sampleTestCases/inp5.txt my-outputs/out5.txt
+./stepDp k-function-approximation/sampleTestCases/inp6.txt my-outputs/out6.txt
+./stepDp k-function-approximation/sampleTestCases/inp7.txt my-outputs/out7.txt
+./stepDp k-function-approximation/sampleTestCases/inp8.txt my-outputs/out8.txt
+./stepDp k-function-approximation/sampleTestCases/inp9.txt my-outputs/out9.txt
+./stepDp k-function-approximation/sampleTestCases/inp10.txt my-outputs/out10.txt
+./stepDp k-function-approximation/sampleTestCases/inp11.txt my-outputs/out11.txt
